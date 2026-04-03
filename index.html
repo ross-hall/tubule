@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tubule</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --tfl-blue:   #003688;
+    --tfl-red:    #DC241F;
+    --bg:         #f0f0eb;
+    --surface:    #ffffff;
+    --text:       #1a1a1a;
+    --muted:      #6b6b6b;
+    --border:     #d4d4cc;
+    --correct:    #1e7e34;
+    --wrong:      #DC241F;
+    --timer-warn: #d97706;
+    --timer-crit: #DC241F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─────────────────────────────────────────
+     SCREENS
+  ───────────────────────────────────────── */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  /* ─────────────────────────────────────────
+     SPLASH SCREEN
+  ───────────────────────────────────────── */
+  #splashScreen {
+    background: var(--tfl-blue);
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Animated line stripes */
+  .splash-lines {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+    pointer-events: none;
+    /* Lines sit behind logo at reduced opacity so text stays legible */
+    opacity: 0.28;
+  }
+
+  .splash-line {
+    width: 0%;
+    flex-shrink: 0;
+    opacity: 1;
+  }
+
+  /* Logo */
+  .splash-logo {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    opacity: 0;
+  }
+
+  .splash-logo-wordmark {
+    font-size: 3.8rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .splash-logo-wordmark span {
+    color: var(--tfl-red);
+  }
+
+  .splash-logo-sub {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* Roundel */
+  .splash-roundel {
+    width: 56px; height: 56px;
+    margin: 0 auto 18px;
+  }
+
+  .splash-roundel svg { width: 100%; height: 100%; }
+
+  /* ─────────────────────────────────────────
+     MENU SCREEN
+  ───────────────────────────────────────── */
+  #menuScreen {
+    background: var(--tfl-blue);
+  }
+
+  .menu-header {
+    padding: 48px 28px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .menu-roundel {
+    width: 48px; height: 48px; margin-bottom: 14px;
+  }
+  .menu-roundel svg { width: 100%; height: 100%; }
+
+  .menu-wordmark {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .menu-wordmark span { color: var(--tfl-red); }
+
+  .menu-tagline {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* Line stripe bar below header */
+  .menu-stripe-bar {
+    height: 6px;
+    width: 100%;
+    margin-top: 28px;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .menu-stripe-seg { flex: 1; height: 100%; }
+
+  /* Menu cards */
+  .menu-cards {
+    flex: 1;
+    padding: 24px 20px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .menu-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 22px 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: background 0.2s, transform 0.15s, border-color 0.2s;
+    text-decoration: none;
+  }
+
+  .menu-card:hover {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  .menu-card:active { transform: translateY(0); }
+
+  .menu-card-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+  }
+
+  .menu-card-text { flex: 1; }
+
+  .menu-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 3px;
+  }
+
+  .menu-card-desc {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+
+  .menu-card-arrow {
+    color: rgba(255,255,255,0.35);
+    font-size: 1.1rem;
+  }
+
+  /* Daily badge */
+  .daily-badge {
+    background: var(--tfl-red);
+    color: white;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* ─────────────────────────────────────────
+     GAME SCREEN (shared by daily + expert)
+  ───────────────────────────────────────── */
+  #gameScreen {
+    background: var(--bg);
+  }
+
+  .game-header {
+    background: var(--tfl-blue);
+    color: white;
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 14px;
+  }
+
+  .back-btn {
+    background: none; border: none; color: white;
+    font-size: 1.2rem; cursor: pointer; padding: 4px;
+    display: flex; align-items: center;
+    opacity: 0.8; transition: opacity 0.15s;
+  }
+  .back-btn:hover { opacity: 1; }
+
+  .game-header-title {
+    font-weight: 700; font-size: 0.95rem;
+    flex: 1; text-align: center;
+  }
+
+  .score-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px; padding: 3px 12px;
+    font-size: 0.82rem; font-weight: 600; flex-shrink: 0;
+  }
+
+  .game-main {
+    flex: 1;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 14px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .streak-dots { display: flex; gap: 5px; }
+  .streak-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); transition: background 0.3s;
+  }
+  .streak-dot.correct { background: var(--correct); }
+  .streak-dot.wrong   { background: var(--wrong); }
+
+  .timer-pill {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 24px; padding: 4px 13px;
+    font-size: 0.95rem; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 70px; justify-content: center;
+    transition: border-color 0.3s, color 0.3s, background 0.3s;
+  }
+  .timer-pill.warn { border-color: var(--timer-warn); color: var(--timer-warn); background: #fffbeb; }
+  .timer-pill.crit {
+    border-color: var(--timer-crit); color: var(--timer-crit); background: #fdecea;
+    animation: timerPulse 0.55s ease infinite;
+  }
+  @keyframes timerPulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.05)} }
+
+  .journey-card-wrap {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .journey-card {
+    background: var(--surface);
+    border-radius: 14px;
+    border: 2.5px solid var(--wrong);
+    overflow: hidden;
+  }
+  .journey-card.correct { border-color: var(--correct); }
+
+  .station-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: var(--tfl-blue); color: white;
+  }
+  .station-row.end {
+    border-top: 2px solid rgba(255,255,255,0.1);
+    transition: background 0.3s;
+  }
+  .journey-card.correct .station-row.end  { background: var(--correct); }
+  .journey-card:not(.correct) .station-row.end { background: var(--wrong); }
+
+  .station-marker {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: white; border: 2.5px solid #1a1a1a;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .station-row.end .station-marker { background: white; border-color: #1a1a1a; }
+  .station-name  { font-size: 0.95rem; font-weight: 700; }
+  .station-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.55; margin-left: auto; }
+
+  .bar-stack { display: flex; flex-direction: column; padding: 8px 12px; background: var(--surface); }
+  .bar-row   { padding: 4px 0; }
+
+  .line-bar {
+    width: 100%; height: 42px; border-radius: 9px;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; padding: 0 12px;
+    position: relative; overflow: hidden; outline: none;
+    transition: transform 0.1s, box-shadow 0.12s;
+  }
+  .line-bar:hover:not(.locked) { transform: scaleY(1.06); box-shadow: 0 3px 12px rgba(0,0,0,0.2); z-index:1; }
+  .line-bar:active:not(.locked) { transform: scaleY(0.95); }
+  .line-bar.locked { cursor: default; }
+  .line-bar.selected { box-shadow: inset 0 0 0 3px rgba(255,255,255,0.5); }
+
+  /* Overground visual distinction: colour sliver | white gap | main colour */
+  .line-bar.overground::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 18px;
+    background: inherit;
+    border-radius: 9px 0 0 9px;
+    z-index: 1;
+  }
+  .line-bar.overground::after {
+    content: '';
+    position: absolute;
+    left: 10px; top: 0; bottom: 0;
+    width: 8px;
+    background: white;
+    z-index: 2;
+  }
+
+  /* Expert mode wrong flash */
+  .line-bar.wrong-flash {
+    animation: wrongFlash 0.35s ease forwards;
+  }
+  @keyframes wrongFlash {
+    0%   { filter: brightness(1); }
+    30%  { filter: brightness(0.4) saturate(0.2); background-color: var(--wrong) !important; }
+    100% { filter: brightness(0.4) saturate(0.2); }
+  }
+
+  /* Auto-advance swipe transition */
+  .journey-card {
+    transition: border-color 0.3s, transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+  }
+  .journey-card.swipe-out {
+    transform: translateX(-110%);
+    opacity: 0;
+  }
+  .journey-card.swipe-in {
+    transform: translateX(110%);
+    opacity: 0;
+    transition: none;
+  }
+  .journey-card.swipe-in-active {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+  }
+
+  /* Animated tick overlay */
+  .tick-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+  }
+  .tick-overlay.show { animation: tickPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  @keyframes tickPop {
+    0%   { opacity: 0; transform: scale(0.3); }
+    60%  { opacity: 1; transform: scale(1.15); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .tick-svg { width: 72px; height: 72px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25)); }
+
+
+  .bar-name {
+    flex: 1; text-align: center;
+    color: white; font-size: 0.8rem; font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.28);
+    opacity: 0; transition: opacity 0.15s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .line-bar.light-text .bar-name { color: rgba(0,0,0,0.75); text-shadow: none; }
+  .line-bar:hover .bar-name, .line-bar.selected .bar-name { opacity: 1; }
+
+  .order-badge {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: white; color: var(--text);
+    font-size: 0.68rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-left: auto;
+    opacity: 0; transform: scale(0.5);
+    transition: opacity 0.15s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+  }
+  .line-bar.selected .order-badge { opacity: 1; transform: scale(1); }
+
+  .game-actions { display: flex; gap: 10px; }
+
+  .btn-primary {
+    flex: 1; background: var(--tfl-blue); color: white;
+    border: none; border-radius: 8px; padding: 12px 20px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #002570; }
+
+  .btn-secondary {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--tfl-blue); color: var(--tfl-blue); }
+
+  /* ─────────────────────────────────────────
+     LEADERBOARD SCREEN
+  ───────────────────────────────────────── */
+  #leaderboardScreen {
+    background: var(--bg);
+  }
+
+  .lb-header {
+    background: var(--tfl-blue); color: white;
+    padding: 0 20px; height: 52px;
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .lb-header-title { font-weight: 700; font-size: 0.95rem; flex: 1; text-align: center; }
+
+  .lb-main {
+    flex: 1; max-width: 480px; width: 100%;
+    margin: 0 auto; padding: 20px 16px 40px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* Tabs */
+  .lb-tabs {
+    display: flex; gap: 0;
+    background: var(--surface);
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .lb-tab {
+    flex: 1; padding: 10px;
+    background: none; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lb-tab.active { background: var(--tfl-blue); color: white; }
+
+  /* Your score card */
+  .lb-your-score {
+    background: var(--tfl-blue); color: white;
+    border-radius: 12px; padding: 18px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .lb-your-score-icon { font-size: 2rem; }
+
+  .lb-your-score-text { flex: 1; }
+  .lb-your-score-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; margin-bottom: 2px; }
+  .lb-your-score-val   { font-size: 1.6rem; font-weight: 800; }
+  .lb-your-score-sub   { font-size: 0.78rem; opacity: 0.6; }
+
+  /* Leaderboard list */
+  .lb-list {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .lb-list-header {
+    padding: 12px 16px 8px;
+    font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+
+  .lb-entry {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  .lb-entry:last-child { border-bottom: none; }
+  .lb-entry.you { background: #eef3ff; }
+
+  .lb-rank {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--border); color: var(--muted);
+    font-size: 0.72rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .lb-rank.gold   { background: #FFD700; color: #7a5c00; }
+  .lb-rank.silver { background: #C0C0C0; color: #555; }
+  .lb-rank.bronze { background: #CD7F32; color: white; }
+
+  .lb-name { flex: 1; font-size: 0.88rem; font-weight: 600; }
+  .lb-name .you-tag { font-size: 0.68rem; color: var(--tfl-blue); font-weight: 700; margin-left: 5px; }
+  .lb-score { font-size: 0.88rem; font-weight: 700; color: var(--tfl-blue); }
+  .lb-streak { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+
+  /* ─────────────────────────────────────────
+     END / RESULT OVERLAY
+  ───────────────────────────────────────── */
+  .result-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .result-overlay.show { display: flex; }
+
+  .result-card {
+    background: white; border-radius: 16px; padding: 30px 26px;
+    max-width: 360px; width: 100%; text-align: center;
+    animation: popIn 0.26s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+
+  .result-icon    { font-size: 2.8rem; margin-bottom: 8px; }
+  .result-title   { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: var(--tfl-blue); }
+  .result-message { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+
+  .result-score-row {
+    display: flex; gap: 10px; margin-bottom: 20px;
+  }
+
+  .result-stat {
+    flex: 1; background: var(--bg); border-radius: 10px; padding: 12px 8px;
+    text-align: center;
+  }
+  .result-stat-val   { font-size: 1.4rem; font-weight: 800; color: var(--tfl-blue); }
+  .result-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  .result-btns { display: flex; gap: 8px; }
+  .result-btns .btn-primary { flex: 1; }
+  .result-btns .btn-secondary { flex: 1; }
+
+  /* ─────────────────────────────────────────
+     DAILY COMPLETE STATE
+  ───────────────────────────────────────── */
+  .daily-done-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 22px;
+    text-align: center;
+    margin: 20px 16px 0;
+  }
+  .daily-done-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .daily-done-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .daily-done-msg   { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+  .daily-done-score { font-size: 2rem; font-weight: 800; color: var(--tfl-blue); margin: 14px 0 4px; }
+  .daily-done-sub   { font-size: 0.78rem; color: var(--muted); }
+  .daily-done-next  { margin-top: 18px; font-size: 0.8rem; color: var(--muted); }
+  .daily-done-countdown { font-size: 1rem; font-weight: 700; color: var(--tfl-blue); margin-top: 4px; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     SPLASH SCREEN
+══════════════════════════════════════════ -->
+<div id="splashScreen" class="screen active">
+  <div class="splash-lines" id="splashLines"></div>
+  <div class="splash-logo" id="splashLogo">
+    <div class="splash-roundel">
+      <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" fill="#DC241F"/>
+        <rect x="2" y="22" width="52" height="12" fill="#003688"/>
+        <circle cx="28" cy="28" r="26" fill="none" stroke="white" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="splash-logo-wordmark">tubu<span>le</span></div>
+    <div class="splash-logo-sub">London Underground Quiz</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MENU SCREEN
+══════════════════════════════════════════ -->
+<div id="menuScreen" class="screen">
+  <div class="menu-header">
+    <div class="menu-roundel">
+      <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" fill="#DC241F"/>
+        <rect x="2" y="22" width="52" height="12" fill="#003688"/>
+        <circle cx="28" cy="28" r="26" fill="none" stroke="white" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="menu-wordmark">tubu<span>le</span></div>
+    <div class="menu-tagline">London Underground Quiz</div>
+    <div class="menu-stripe-bar" id="menuStripeBar"></div>
+  </div>
+
+  <div class="menu-cards">
+    <div class="menu-card" onclick="startDaily()">
+      <div class="menu-card-icon" style="background:rgba(220,36,31,0.2)">🗓️</div>
+      <div class="menu-card-text">
+        <div class="menu-card-title">Daily Quiz</div>
+        <div class="menu-card-desc">Same puzzle for everyone today</div>
+        <span class="daily-badge" id="dailyBadge">Today's puzzle</span>
+      </div>
+      <span class="menu-card-arrow">›</span>
+    </div>
+
+    <div class="menu-card" onclick="startPractice()">
+      <div class="menu-card-icon" style="background:rgba(30,126,52,0.2)">🚇</div>
+      <div class="menu-card-text">
+        <div class="menu-card-title">Practice</div>
+        <div class="menu-card-desc">Unranked — scores not recorded</div>
+      </div>
+      <span class="menu-card-arrow">›</span>
+    </div>
+
+    <div class="menu-card" onclick="startExpert()">
+      <div class="menu-card-icon" style="background:rgba(0,152,212,0.2)">⚡</div>
+      <div class="menu-card-text">
+        <div class="menu-card-title">Expert Mode</div>
+        <div class="menu-card-desc">Harder routes, shorter timers</div>
+      </div>
+      <span class="menu-card-arrow">›</span>
+    </div>
+
+    <div class="menu-card" onclick="showLeaderboard()">
+      <div class="menu-card-icon" style="background:rgba(255,215,0,0.2)">🏆</div>
+      <div class="menu-card-text">
+        <div class="menu-card-title">Leaderboard</div>
+        <div class="menu-card-desc">This week & all-time high scores</div>
+      </div>
+      <span class="menu-card-arrow">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════════ -->
+<div id="gameScreen" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="goMenu()">‹</button>
+    <div class="game-header-title" id="gameTitle">Daily Quiz</div>
+    <div class="score-badge" id="scoreBadge">Score: 0</div>
+  </div>
+
+  <div class="game-main">
+    <div class="top-row">
+      <div class="streak-dots" id="streakDots"></div>
+      <div class="timer-pill" id="timerPill">
+        <span id="timerIcon">⏱</span>
+        <span id="timerDisplay">0:00</span>
+      </div>
+    </div>
+
+    <div class="journey-card-wrap">
+    <div class="journey-card" id="journeyCard">
+      <div class="station-row">
+        <div class="station-marker"></div>
+        <div class="station-name" id="fromStation"></div>
+        <span class="station-label">Start</span>
+      </div>
+      <div class="bar-stack" id="barStack"></div>
+      <div class="station-row end">
+        <div class="station-marker"></div>
+        <div class="station-name" id="toStation"></div>
+        <span class="station-label">End</span>
+      </div>
+    </div>
+    <div class="tick-overlay" id="tickOverlay">
+      <svg class="tick-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="36" cy="36" r="34" fill="var(--correct)" stroke="white" stroke-width="3"/>
+        <polyline points="18,37 30,50 54,23" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    </div>
+
+    <div class="game-actions">
+      <button class="btn-secondary" onclick="clearAnswer()">Clear</button>
+      <button class="btn-primary" id="nextBtn" onclick="advancePuzzle()">Skip →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     LEADERBOARD SCREEN
+══════════════════════════════════════════ -->
+<div id="leaderboardScreen" class="screen">
+  <div class="lb-header">
+    <button class="back-btn" onclick="goMenu()">‹</button>
+    <div class="lb-header-title">Leaderboard</div>
+    <div style="width:36px"></div>
+  </div>
+
+  <div class="lb-main">
+    <div class="lb-tabs">
+      <button class="lb-tab active" id="tabWeek"     onclick="switchTab('week')">This Week</button>
+      <button class="lb-tab"        id="tabAllTime"  onclick="switchTab('alltime')">All Time</button>
+    </div>
+
+    <div class="lb-your-score">
+      <div class="lb-your-score-icon" id="lbYourIcon">🚇</div>
+      <div class="lb-your-score-text">
+        <div class="lb-your-score-label">Your best score</div>
+        <div class="lb-your-score-val"  id="lbYourVal">—</div>
+        <div class="lb-your-score-sub"  id="lbYourSub">Play a game to set your score</div>
+      </div>
+    </div>
+
+    <div class="lb-list">
+      <div class="lb-list-header">Rankings</div>
+      <div id="lbEntries"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     RESULT OVERLAY
+══════════════════════════════════════════ -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="result-icon"    id="resultIcon">🎉</div>
+    <div class="result-title"   id="resultTitle">Game Over!</div>
+    <div class="result-message" id="resultMessage"></div>
+    <div class="result-score-row">
+      <div class="result-stat">
+        <div class="result-stat-val"   id="resultCorrect">0</div>
+        <div class="result-stat-label">Correct</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-val"   id="resultScore">0</div>
+        <div class="result-stat-label">Score</div>
+      </div>
+    </div>
+    <div class="result-btns">
+      <button class="btn-secondary" onclick="goMenu()">Menu</button>
+      <button class="btn-primary"   id="playAgainBtn" onclick="playAgain()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// LINE DATA
+// ─────────────────────────────────────────
+const UNDERGROUND = [
+  { id:'bakerloo',     name:'Bakerloo',          color:'#B36305', textDark:false, overground:false },
+  { id:'central',      name:'Central',            color:'#E32017', textDark:false, overground:false },
+  { id:'circle',       name:'Circle',             color:'#FFD300', textDark:true,  overground:false },
+  { id:'district',     name:'District',           color:'#00782A', textDark:false, overground:false },
+  { id:'hammersmith',  name:'Hammersmith & City', color:'#F3A9BB', textDark:true,  overground:false },
+  { id:'jubilee',      name:'Jubilee',            color:'#768088', textDark:false, overground:false },
+  { id:'metropolitan', name:'Metropolitan',       color:'#9B0056', textDark:false, overground:false },
+  { id:'northern',     name:'Northern',           color:'#1a1a1a', textDark:false, overground:false },
+  { id:'piccadilly',   name:'Piccadilly',         color:'#003688', textDark:false, overground:false },
+  { id:'victoria',     name:'Victoria',           color:'#0098D4', textDark:false, overground:false },
+  { id:'waterloo',     name:'Waterloo & City',    color:'#95CDBA', textDark:true,  overground:false },
+];
+
+const SURFACE = [
+  { id:'lioness',     name:'Lioness',     color:'#FAA61A', textDark:true,  overground:true  },
+  { id:'mildmay',     name:'Mildmay',     color:'#0076CE', textDark:false, overground:true  },
+  { id:'windrush',    name:'Windrush',    color:'#E5151B', textDark:false, overground:true  },
+  { id:'weaver',      name:'Weaver',      color:'#924499', textDark:false, overground:true  },
+  { id:'suffragette', name:'Suffragette', color:'#00A85A', textDark:false, overground:true  },
+  { id:'liberty',     name:'Liberty',     color:'#6B6B6B', textDark:false, overground:true  },
+  { id:'elizabeth',   name:'Elizabeth',   color:'#6950A1', textDark:false, overground:false },
+  { id:'dlr',         name:'DLR',         color:'#00A4A7', textDark:false, overground:false },
+];
+
+const ALL_LINES = [...UNDERGROUND, ...SURFACE];
+const lineMap   = Object.fromEntries(ALL_LINES.map(l => [l.id, l]));
+
+// ─────────────────────────────────────────
+// PUZZLES
+// ─────────────────────────────────────────
+const DAILY_PUZZLES = [
+  { from:'Brixton',              to:'Canary Wharf',      answer:['victoria','jubilee'],                    time:60 },
+  { from:'Heathrow Terminal 5',  to:"King's Cross",      answer:['piccadilly'],                            time:45 },
+  { from:'Wimbledon',            to:'Stratford',         answer:['district','jubilee'],                    time:60 },
+  { from:'Richmond',             to:'Liverpool Street',  answer:['district','circle'],                     time:60 },
+  { from:'Stanmore',             to:'Brixton',           answer:['jubilee','victoria'],                    time:60 },
+  { from:'Ealing Broadway',      to:'Canary Wharf',      answer:['elizabeth'],                             time:45 },
+  { from:'Morden',               to:'Paddington',        answer:['northern','circle'],                     time:60 },
+  { from:'Barking',              to:'Gospel Oak',        answer:['suffragette'],                           time:45 },
+  { from:'Stratford',            to:'Richmond',          answer:['mildmay','district'],                    time:60 },
+  { from:'Barking',              to:'Baker Street',      answer:['district','hammersmith','metropolitan'], time:75 },
+];
+
+const EXPERT_PUZZLES = [
+  { from:'Cockfosters',          to:'Waterloo',          answer:['piccadilly','jubilee'],                  time:35 },
+  { from:'Elephant & Castle',    to:'Hammersmith',        answer:['bakerloo','district'],                   time:30 },
+  { from:'Upminster',            to:'Paddington',         answer:['district','circle'],                     time:30 },
+  { from:'Mill Hill East',       to:'Victoria',           answer:['northern','victoria'],                   time:35 },
+  { from:'Watford',              to:'Brixton',            answer:['lioness','victoria'],                    time:35 },
+  { from:'Romford',              to:'Clapham Junction',   answer:['liberty','district','windrush'],         time:40 },
+  { from:'Amersham',             to:'Stratford',          answer:['metropolitan','jubilee'],                time:35 },
+  { from:'Richmond',             to:'Aldgate East',       answer:['district'],                              time:25 },
+  { from:'Chesham',              to:'Canary Wharf',       answer:['metropolitan','jubilee'],                time:35 },
+  { from:'Uxbridge',             to:'Liverpool Street',   answer:['metropolitan','hammersmith','circle'],   time:40 },
+];
+
+const POOL_SIZE          = 8;
+const TOTAL_ROUNDS       = 10; // expert
+const DAILY_ROUNDS       = 5;  // daily
+
+// ─────────────────────────────────────────
+// GAME STATE
+// ─────────────────────────────────────────
+let mode          = 'daily'; // 'daily' | 'expert'
+let puzzleSet     = [];
+let currentPuzzle = 0;
+let pool          = [];
+let selected      = [];
+let solved        = false;
+let timerSecs     = 0;
+let timerInterval = null;
+let score         = 0;
+let streak        = [];
+let elapsedSecs   = 0; // stopwatch for daily mode
+
+// Persistent storage (localStorage)
+function saveScore(mode, s, elapsed) {
+  try {
+    if (mode === 'daily' || mode === 'practice') {
+      // For daily: lower time is better; store time if all correct or best score
+      const prevTime = parseInt(localStorage.getItem('tubule_daily_best_time') || '99999');
+      const prevScore = parseInt(localStorage.getItem('tubule_daily_best_score') || '0');
+      if (s > prevScore || (s === prevScore && elapsed < prevTime)) {
+        localStorage.setItem('tubule_daily_best_time', elapsed);
+        localStorage.setItem('tubule_daily_best_score', s);
+      }
+      localStorage.setItem('tubule_daily_date', todayStr());
+      localStorage.setItem('tubule_daily_score', s);
+      localStorage.setItem('tubule_daily_time', elapsed);
+    } else {
+      const key = 'tubule_expert_best';
+      const cur = parseInt(localStorage.getItem(key) || '0');
+      if (s > cur) localStorage.setItem(key, s);
+    }
+
+    // All-time list
+    const atKey  = 'tubule_alltime';
+    const atList = JSON.parse(localStorage.getItem(atKey) || '[]');
+    atList.push({ name:'You', score: s, mode, elapsed: elapsed || 0, date: Date.now() });
+    localStorage.setItem(atKey, JSON.stringify(atList.slice(-100)));
+  } catch(e) {}
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function dailyDone() {
+  try {
+    return localStorage.getItem('tubule_daily_date') === todayStr();
+  } catch(e) { return false; }
+}
+
+function getBest(m) {
+  try {
+    return parseInt(localStorage.getItem(m === 'daily' ? 'tubule_daily_best' : 'tubule_expert_best') || '0');
+  } catch(e) { return 0; }
+}
+
+// ─────────────────────────────────────────
+// SPLASH ANIMATION
+// ─────────────────────────────────────────
+function runSplash() {
+  const container = document.getElementById('splashLines');
+  const logo      = document.getElementById('splashLogo');
+
+  // Fill screen with equal-height line rows
+  const vh       = window.innerHeight;
+  const rowH     = 32;
+  const numRows  = Math.ceil(vh / rowH);
+  const lines    = [...ALL_LINES];
+
+  for (let i = 0; i < numRows; i++) {
+    const line = lines[i % lines.length];
+    const el   = document.createElement('div');
+    el.className     = 'splash-line';
+    el.style.height  = rowH + 'px';
+    el.style.background = line.color;
+    container.appendChild(el);
+  }
+
+  // Sweep lines in left-to-right with stagger
+  const lineEls = container.querySelectorAll('.splash-line');
+  let lastDelay = 0;
+  lineEls.forEach((el, i) => {
+    const d = i * 22;
+    lastDelay = d;
+    setTimeout(() => {
+      el.style.transition = `width ${200 + Math.random()*100}ms cubic-bezier(0.4,0,0.2,1)`;
+      el.style.width = '100%';
+    }, d);
+  });
+
+  // Logo fades up after lines finish
+  setTimeout(() => {
+    logo.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    logo.style.transform  = 'translateY(0)';
+    logo.style.opacity    = '1';
+  }, lastDelay + 150);
+
+  // Advance to menu
+  setTimeout(() => {
+    showScreen('menuScreen');
+    buildMenuStripe();
+  }, lastDelay + 1800);
+}
+
+// ─────────────────────────────────────────
+// MENU
+// ─────────────────────────────────────────
+function buildMenuStripe() {
+  const bar = document.getElementById('menuStripeBar');
+  bar.innerHTML = '';
+  ALL_LINES.forEach(line => {
+    const seg = document.createElement('div');
+    seg.className = 'menu-stripe-seg';
+    seg.style.background = line.color;
+    bar.appendChild(seg);
+  });
+
+  // Daily badge
+  if (dailyDone()) {
+    document.getElementById('dailyBadge').textContent = '✓ Completed today';
+    document.getElementById('dailyBadge').style.background = '#1e7e34';
+  }
+}
+
+function startDaily() {
+  if (dailyDone()) {
+    // Show already-done state
+    showDailyDone();
+    return;
+  }
+  mode       = 'daily';
+  puzzleSet  = getDailyPuzzles();
+  startGame('Daily Quiz');
+}
+
+function startExpert() {
+  mode      = 'expert';
+  puzzleSet = shuffle([...EXPERT_PUZZLES]).slice(0, TOTAL_ROUNDS);
+  startGame('Expert Mode');
+}
+
+function startPractice() {
+  mode      = 'practice';
+  puzzleSet = shuffle([...DAILY_PUZZLES]).slice(0, DAILY_ROUNDS);
+  startGame('Practice');
+}
+
+// Deterministic daily puzzle selection based on date
+function getDailyPuzzles() {
+  const seed = parseInt(todayStr().replace(/-/g,''));
+  const arr  = [...DAILY_PUZZLES];
+  // Simple seeded shuffle
+  let s = seed;
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, TOTAL_ROUNDS);
+}
+
+function showDailyDone() {
+  showScreen('gameScreen');
+  const gs = document.getElementById('gameScreen');
+  document.getElementById('gameTitle').textContent = 'Daily Quiz';
+  const main = gs.querySelector('.game-main');
+  main.innerHTML = `
+    <div class="daily-done-card">
+      <div class="daily-done-icon">✅</div>
+      <div class="daily-done-title">Already completed today!</div>
+      <div class="daily-done-msg">You've finished today's Daily Quiz. Come back tomorrow for a new set of puzzles.</div>
+      <div class="daily-done-score">${(() => { try { return localStorage.getItem('tubule_daily_score') || '—'; } catch(e){ return '—'; } })()}</div>
+      <div class="daily-done-sub">Today's score</div>
+      <div class="daily-done-next">Next puzzle in</div>
+      <div class="daily-done-countdown" id="doneCountdown"></div>
+    </div>
+    <div style="padding:0 0;display:flex;gap:10px">
+      <button class="btn-secondary" style="flex:1" onclick="goMenu()">← Menu</button>
+      <button class="btn-primary" style="flex:1" onclick="startExpert()">Try Expert →</button>
+    </div>
+  `;
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
+}
+
+function tickCountdown() {
+  const el = document.getElementById('doneCountdown');
+  if (!el) return;
+  const now     = new Date();
+  const midnight = new Date(now); midnight.setHours(24,0,0,0);
+  const diff    = midnight - now;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  const s = Math.floor((diff%60000)/1000);
+  el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ─────────────────────────────────────────
+// GAME
+// ─────────────────────────────────────────
+function startGame(title) {
+  score         = 0;
+  streak        = [];
+  currentPuzzle = 0;
+  elapsedSecs   = 0;
+  const rounds  = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+
+  document.getElementById('gameTitle').textContent        = title;
+  document.getElementById('scoreBadge').textContent       = 'Score: 0';
+
+  // Restore game-main if it was replaced by daily-done
+  const gs   = document.getElementById('gameScreen');
+  const main = gs.querySelector('.game-main');
+  if (!document.getElementById('barStack')) {
+    main.innerHTML = `
+      <div class="top-row">
+        <div class="streak-dots" id="streakDots"></div>
+        <div class="timer-pill" id="timerPill"><span id="timerIcon">⏱</span><span id="timerDisplay">0:00</span></div>
+      </div>
+      <div class="journey-card-wrap">
+      <div class="journey-card" id="journeyCard">
+        <div class="station-row">
+          <div class="station-marker"></div>
+          <div class="station-name" id="fromStation"></div>
+          <span class="station-label">Start</span>
+        </div>
+        <div class="bar-stack" id="barStack"></div>
+        <div class="station-row end">
+          <div class="station-marker"></div>
+          <div class="station-name" id="toStation"></div>
+          <span class="station-label">End</span>
+        </div>
+      </div>
+      <div class="tick-overlay" id="tickOverlay">
+        <svg class="tick-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="36" cy="36" r="34" fill="var(--correct)" stroke="white" stroke-width="3"/>
+          <polyline points="18,37 30,50 54,23" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      </div>
+      <div class="game-actions">
+        <button class="btn-secondary" onclick="clearAnswer()">Clear</button>
+        <button class="btn-primary" id="nextBtn" onclick="advancePuzzle()">Skip →</button>
+      </div>
+    `;
+  }
+
+  showScreen('gameScreen');
+  renderStreakDots();
+  loadPuzzle(0);
+}
+
+function loadPuzzle(idx) {
+  const p      = puzzleSet[idx];
+  const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+  selected = [];
+  solved   = false;
+  pool     = buildPool(p);
+
+  document.getElementById('fromStation').textContent = p.from;
+  document.getElementById('toStation').textContent   = p.to;
+  const jCard = document.getElementById('journeyCard');
+  jCard.classList.remove('correct', 'swipe-out');
+  // Reset station row backgrounds
+  jCard.querySelectorAll('.station-row').forEach(r => r.style.background = '');
+  document.getElementById('nextBtn').textContent = idx >= rounds - 1 ? 'Finish' : 'Skip →';
+
+  // Reset tick
+  const tickOverlay = document.getElementById('tickOverlay');
+  if (tickOverlay) tickOverlay.classList.remove('show');
+
+  renderBars();
+
+  if (mode === 'daily' || mode === 'practice') {
+    // Keep stopwatch running across puzzles — just resume ticking
+    clearInterval(timerInterval);
+    timerInterval = setInterval(tickStopwatch, 1000);
+    updateTimerDisplay();
+  } else {
+    startTimer(p.time);
+  }
+}
+
+function buildPool(puzzle) {
+  const correct = puzzle.answer;
+  const others  = shuffle(ALL_LINES.map(l => l.id).filter(id => !correct.includes(id)));
+  return shuffle([...correct, ...others.slice(0, POOL_SIZE - correct.length)]);
+}
+
+function renderBars() {
+  const stack = document.getElementById('barStack');
+  if (!stack) return;
+  stack.innerHTML = '';
+
+  pool.forEach(id => {
+    const line   = lineMap[id];
+    const selIdx = selected.indexOf(id);
+    const isSel  = selIdx !== -1;
+
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+
+    const bar = document.createElement('button');
+    bar.className = [
+      'line-bar',
+      line.textDark   ? 'light-text'      : '',
+      line.overground ? 'overground'       : '',
+      isSel           ? 'selected'         : '',
+      solved          ? 'locked'           : '',
+      
+    ].filter(Boolean).join(' ');
+
+    bar.style.background = line.color;
+
+    if (!solved) bar.onclick = () => toggleLine(id);
+
+    const nameEl = document.createElement('span');
+    nameEl.className   = 'bar-name';
+    nameEl.textContent = line.name;
+
+    const badge = document.createElement('span');
+    badge.className   = 'order-badge';
+    badge.textContent = isSel ? selIdx + 1 : '';
+
+    bar.appendChild(nameEl);
+    bar.appendChild(badge);
+    row.appendChild(bar);
+    stack.appendChild(row);
+  });
+}
+
+function toggleLine(id) {
+  if (solved) return;
+  const idx = selected.indexOf(id);
+  if (idx !== -1) selected.splice(idx, 1);
+  else            selected.push(id);
+  renderBars();
+  checkAnswer();
+}
+
+function clearAnswer() {
+  if (solved) return;
+  selected = [];
+  renderBars();
+  const card = document.getElementById('journeyCard');
+  if (card) card.classList.remove('correct');
+}
+
+function checkAnswer() {
+  const p       = puzzleSet[currentPuzzle];
+  const correct =
+    selected.length === p.answer.length &&
+    p.answer.every((id, i) => id === selected[i]);
+
+  const card = document.getElementById('journeyCard');
+  if (!card) return;
+
+  if (correct) {
+    solved = true;
+    stopTimer();
+    card.classList.add('correct');
+
+    // Turn station rows green
+    const rows = card.querySelectorAll('.station-row');
+    rows.forEach(r => r.style.background = 'var(--correct)');
+
+    // Show tick
+    const tickOverlay = document.getElementById('tickOverlay');
+    if (tickOverlay) {
+      tickOverlay.classList.add('show');
+    }
+
+    score++;
+    streak.push('correct');
+    document.getElementById('scoreBadge').textContent = `Score: ${score}`;
+    renderStreakDots();
+    renderBars();
+
+    // Auto-advance after tick animation
+    const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+    setTimeout(() => {
+      swipeToNext();
+    }, 900);
+
+  } else if (mode === 'expert') {
+    // Wrong in expert: flash red, immediately move on
+    const bar = document.querySelector(`.line-bar[data-id="${selected[selected.length - 1]}"]`);
+    // Flash all selected bars red briefly
+    document.querySelectorAll('.line-bar.selected').forEach(b => {
+      b.classList.add('wrong-flash');
+    });
+    solved = true;
+    stopTimer();
+    streak.push('wrong');
+    renderStreakDots();
+    const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+    setTimeout(() => {
+      swipeToNext();
+    }, 450);
+  }
+}
+
+function swipeToNext() {
+  const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+  const card = document.getElementById('journeyCard');
+  const wrap = card ? card.closest('.journey-card-wrap') : null;
+
+  if (currentPuzzle >= rounds - 1) {
+    endGame();
+    return;
+  }
+
+  // Swipe current card out
+  if (card) card.classList.add('swipe-out');
+
+  setTimeout(() => {
+    currentPuzzle++;
+    loadPuzzle(currentPuzzle);
+
+    // Reset tick overlay
+    const tickOverlay = document.getElementById('tickOverlay');
+    if (tickOverlay) tickOverlay.classList.remove('show');
+
+    // Swipe new card in
+    const newCard = document.getElementById('journeyCard');
+    if (newCard) {
+      newCard.classList.add('swipe-in');
+      // Force reflow
+      newCard.getBoundingClientRect();
+      newCard.classList.remove('swipe-in');
+      newCard.classList.add('swipe-in-active');
+      setTimeout(() => newCard.classList.remove('swipe-in-active'), 400);
+    }
+  }, 350);
+}
+
+function startTimer(secs) {
+  clearInterval(timerInterval);
+  if (mode === 'daily' || mode === 'practice') {
+    // Stopwatch: counts up, shared across all puzzles
+    updateTimerDisplay();
+    timerInterval = setInterval(tickStopwatch, 1000);
+  } else {
+    // Countdown: per-puzzle
+    timerSecs = secs;
+    updateTimerDisplay();
+    timerInterval = setInterval(tickCountdown, 1000);
+  }
+}
+
+function stopTimer() { clearInterval(timerInterval); }
+
+function tickStopwatch() {
+  if (solved) return; // pause while solved, resumes on next puzzle load
+  elapsedSecs++;
+  updateTimerDisplay();
+}
+
+function tickCountdown() {
+  if (solved) return;
+  timerSecs--;
+  updateTimerDisplay();
+  if (timerSecs <= 0) { stopTimer(); onTimeout(); }
+}
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+function updateTimerDisplay() {
+  const el   = document.getElementById('timerDisplay');
+  const pill = document.getElementById('timerPill');
+  if (!el || !pill) return;
+
+  if (mode === 'daily' || mode === 'practice') {
+    el.textContent = fmtTime(elapsedSecs);
+    pill.classList.remove('warn','crit');
+  } else {
+    el.textContent = timerSecs;
+    pill.classList.remove('warn','crit');
+    if      (timerSecs <= 10) pill.classList.add('crit');
+    else if (timerSecs <= 20) pill.classList.add('warn');
+  }
+}
+
+function onTimeout() {
+  solved = true;
+  streak.push('wrong');
+  renderStreakDots();
+  document.querySelectorAll('.line-bar').forEach(b => { b.classList.add('locked'); b.onclick = null; });
+  setTimeout(() => { swipeToNext(); }, 800);
+}
+
+function advancePuzzle() {
+  const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+  if (mode !== 'daily' && mode !== 'practice') stopTimer();
+  if (!solved) { streak.push('wrong'); renderStreakDots(); solved = true; }
+  swipeToNext();
+}
+
+function endGame() {
+  stopTimer();
+  if (mode !== 'practice') saveScore(mode, score, elapsedSecs);
+
+  const rounds  = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+  const correct = streak.filter(s => s === 'correct').length;
+  const icon    = score >= rounds ? '🏆' : score >= Math.ceil(rounds/2) ? '🌟' : '🚇';
+  const msg     = mode === 'expert'
+    ? (score >= 8 ? 'Elite network knowledge!' : score >= 5 ? 'Strong expert result!' : 'Expert mode is tough — keep going!')
+    : (score >= rounds ? 'Perfect run!' : score >= Math.ceil(rounds/2) ? 'Solid knowledge!' : 'Keep riding!');
+
+  document.getElementById('resultIcon').textContent    = icon;
+  document.getElementById('resultTitle').textContent   = 'Game Over!';
+  document.getElementById('resultMessage').textContent = msg;
+  document.getElementById('resultCorrect').textContent = correct;
+
+  // Show time for daily, score for expert
+  if (mode === 'daily' || mode === 'practice') {
+    document.getElementById('resultScore').textContent   = fmtTime(elapsedSecs);
+    document.querySelector('#resultOverlay .result-stat:last-child .result-stat-label').textContent = 'Time';
+  } else {
+    document.getElementById('resultScore').textContent   = score;
+    document.querySelector('#resultOverlay .result-stat:last-child .result-stat-label').textContent = 'Score';
+  }
+
+  const pab = document.getElementById('playAgainBtn');
+  if (mode === 'daily') {
+    pab.textContent = 'Try Expert →';
+    pab.onclick     = () => { document.getElementById('resultOverlay').classList.remove('show'); startExpert(); };
+  } else if (mode === 'practice') {
+    pab.textContent = 'Play Again';
+    pab.onclick     = () => { document.getElementById('resultOverlay').classList.remove('show'); startPractice(); };
+  } else {
+    pab.textContent = 'Play Again';
+    pab.onclick     = playAgain;
+  }
+
+  document.getElementById('resultOverlay').classList.add('show');
+}
+
+function playAgain() {
+  document.getElementById('resultOverlay').classList.remove('show');
+  if (mode === 'expert') startExpert();
+  else goMenu();
+}
+
+// ─────────────────────────────────────────
+// LEADERBOARD
+// ─────────────────────────────────────────
+let lbTab = 'week';
+
+function showLeaderboard() {
+  showScreen('leaderboardScreen');
+  renderLeaderboard();
+}
+
+function switchTab(tab) {
+  lbTab = tab;
+  document.getElementById('tabWeek').classList.toggle('active', tab === 'week');
+  document.getElementById('tabAllTime').classList.toggle('active', tab === 'alltime');
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  // Your best
+  try {
+    const dailyScore = parseInt(localStorage.getItem('tubule_daily_best_score') || '0');
+    const dailyTime  = parseInt(localStorage.getItem('tubule_daily_best_time')  || '0');
+    const expertBest = parseInt(localStorage.getItem('tubule_expert_best')       || '0');
+
+    if (dailyScore > 0 || dailyTime > 0) {
+      document.getElementById('lbYourIcon').textContent = dailyScore >= DAILY_ROUNDS ? '🏆' : '🌟';
+      document.getElementById('lbYourVal').textContent  = `${dailyScore}/${DAILY_ROUNDS} · ${fmtTime(dailyTime)}`;
+      document.getElementById('lbYourSub').textContent  = 'Your best daily time';
+    } else if (expertBest > 0) {
+      document.getElementById('lbYourIcon').textContent = '⚡';
+      document.getElementById('lbYourVal').textContent  = `${expertBest}/10`;
+      document.getElementById('lbYourSub').textContent  = 'Expert best score';
+    } else {
+      document.getElementById('lbYourIcon').textContent = '🚇';
+      document.getElementById('lbYourVal').textContent  = '—';
+      document.getElementById('lbYourSub').textContent  = 'Play a game to set your score';
+    }
+  } catch(e) {}
+
+  // Mock leaderboard — daily uses time (lower = better), shown as m:ss
+  const mockWeek = [
+    { name:'TubeMaster99', score:'5/5', time:'1:12', streak:'Fastest today'  },
+    { name:'LondonLocal',  score:'5/5', time:'1:34', streak:'Perfect score'  },
+    { name:'RailRider',    score:'5/5', time:'1:58', streak:'All correct'    },
+    { name:'NightTube',    score:'4/5', time:'2:10', streak:'4 correct'      },
+    { name:'ZoneFour',     score:'4/5', time:'2:45', streak:'4 correct'      },
+  ];
+
+  const mockAll = [
+    { name:'TubeMaster99', score:'5/5', time:'0:58', streak:'All-time record' },
+    { name:'MetroMind',    score:'5/5', time:'1:05', streak:'Flawless run'    },
+    { name:'LondonLocal',  score:'5/5', time:'1:12', streak:'Personal best'   },
+    { name:'RailRider',    score:'5/5', time:'1:34', streak:'Top scorer'      },
+    { name:'ZoneFour',     score:'4/5', time:'1:50', streak:'Strong run'      },
+  ];
+
+  const list    = lbTab === 'week' ? mockWeek : mockAll;
+  const entries = document.getElementById('lbEntries');
+  entries.innerHTML = '';
+
+  // Try to insert "You" from localStorage
+  let fullList = [...list];
+  try {
+    const ds = parseInt(localStorage.getItem('tubule_daily_best_score') || '0');
+    const dt = parseInt(localStorage.getItem('tubule_daily_best_time')  || '0');
+    if (dt > 0) {
+      const youEntry = { name:'You', score:`${ds}/${DAILY_ROUNDS}`, time: fmtTime(dt), streak:'Your best', you: true, rawTime: dt };
+      let inserted = false;
+      for (let i = 0; i < fullList.length; i++) {
+        // Sort by score desc, then time asc
+        const theirTime = timeStrToSecs(fullList[i].time);
+        const theirScore = parseInt(fullList[i].score);
+        if (ds > theirScore || (ds === theirScore && dt < theirTime)) {
+          fullList.splice(i, 0, youEntry);
+          inserted = true; break;
+        }
+      }
+      if (!inserted) fullList.push(youEntry);
+    }
+  } catch(e) {}
+
+  fullList.slice(0, 8).forEach((entry, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-entry' + (entry.you ? ' you' : '');
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    row.innerHTML = `
+      <div class="lb-rank ${rankClass}">${i+1}</div>
+      <div style="flex:1">
+        <div class="lb-name">${entry.name}${entry.you ? '<span class="you-tag">YOU</span>' : ''}</div>
+        <div class="lb-streak">${entry.streak}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="lb-score">${entry.time}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">${entry.score}</div>
+      </div>
+    `;
+    entries.appendChild(row);
+  });
+}
+
+function timeStrToSecs(t) {
+  const parts = t.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+// ─────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goMenu() {
+  stopTimer();
+  document.getElementById('resultOverlay').classList.remove('show');
+  showScreen('menuScreen');
+  buildMenuStripe();
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderStreakDots() {
+  const con = document.getElementById('streakDots');
+  if (!con) return;
+  con.innerHTML = '';
+  const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
+  for (let i = 0; i < rounds; i++) {
+    const d = document.createElement('div');
+    d.className = 'streak-dot' + (streak[i] ? ' ' + streak[i] : '');
+    con.appendChild(d);
+  }
+}
+
+// ─────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Prep splash logo position
+  const logo = document.getElementById('splashLogo');
+  logo.style.transform = 'translateY(10px)';
+  runSplash();
+});
+</script>
+</body>
+</html>
