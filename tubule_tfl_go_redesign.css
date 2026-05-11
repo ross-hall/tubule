@@ -1,0 +1,673 @@
+/* ═══════════════════════════════════════════════════════════
+   TUBULE - TfL GO INSPIRED REDESIGN
+   Apply these styles to transform Tubule to match TfL Go aesthetic
+   ═══════════════════════════════════════════════════════════ */
+
+/* Root Variables - TfL Go Color Palette */
+:root {
+  --tfl-blue: #0019A8;
+  --tfl-blue-hover: #001380;
+  --bg: #F5F5F5;
+  --surface: #FFFFFF;
+  --text: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --border: #E8E8E8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.12);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* Menu Screen - White Card Design */
+#menuScreen {
+  background: var(--bg) !important;
+}
+
+.menu-header {
+  background: var(--surface) !important;
+  padding: 32px 20px !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.menu-wordmark {
+  color: var(--tfl-blue) !important;
+  font-size: 2.4rem !important;
+}
+
+.menu-tagline {
+  color: var(--text-secondary) !important;
+}
+
+.menu-cards {
+  background: transparent !important;
+  position: relative !important;
+  padding: 32px 20px !important;
+}
+
+/* Remove vertical tube line */
+.menu-tube-line {
+  display: none !important;
+}
+
+.menu-card {
+  background: var(--surface) !important;
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  border-radius: 16px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  margin-bottom: 16px !important;
+  padding: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.menu-card:hover {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Circle stop (no line) */
+.menu-card-stop {
+  position: relative !important;
+  width: 56px !important;
+  height: 56px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.menu-card-circle {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 4px solid var(--surface) !important;
+}
+
+.menu-card-circle svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.menu-card-text {
+  flex: 1 !important;
+}
+
+.menu-card-title {
+  color: var(--text) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 4px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.menu-card-desc {
+  color: var(--text-secondary) !important;
+  font-size: 0.85rem !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Simple chevron arrow */
+.menu-card-arrow {
+  color: var(--text-secondary) !important;
+  font-size: 1.5rem !important;
+  opacity: 0.5 !important;
+  font-weight: 300 !important;
+}
+
+.menu-card-icon {
+  display: none !important;
+}
+
+/* Hide the top score badge - we only show timer */
+.score-badge {
+  display: none !important;
+}
+
+/* Game title should be visible */
+.game-header-title {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+}
+
+/* Game Screen - Clean White Cards */
+#gameScreen {
+  background: var(--bg) !important;
+}
+
+.game-header {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 16px 20px !important;
+}
+
+/* Back button arrow must be visible */
+.back-btn {
+  color: var(--text) !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 1.5rem !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  opacity: 1 !important;
+  line-height: 1 !important;
+}
+
+.game-logo {
+  color: var(--tfl-blue) !important;
+  font-size: 1.3rem !important;
+}
+
+.game-stats {
+  gap: 16px !important;
+}
+
+.stat-pill {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.stat-label {
+  color: var(--text-secondary) !important;
+}
+
+.stat-value {
+  color: var(--text) !important;
+}
+
+/* Journey Card - White with Shadow */
+.journey-card {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: none !important;
+}
+
+.journey-label {
+  color: var(--text-secondary) !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+.journey-station {
+  color: var(--text) !important;
+  font-size: 1.4rem !important;
+}
+
+/* Line Selector - Minimal Pills */
+.line-selector {
+  background: transparent !important;
+  padding: 16px 20px !important;
+}
+
+.line-circle {
+  box-shadow: var(--shadow-sm) !important;
+  border: 2px solid var(--surface) !important;
+  overflow: visible !important; /* Allow X button to show outside circle */
+}
+
+/* Inner wrapper clips orange stripe */
+.line-circle-inner {
+  overflow: hidden !important;
+  border-radius: 50% !important;
+}
+
+.line-circle:hover {
+  transform: scale(1.05) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Route Bars - KEEP their line colors (set inline via JavaScript) */
+.route-bar {
+  /* NO background property here - let inline styles work! */
+  box-shadow: var(--shadow-sm) !important;
+  border: none !important;
+  margin-bottom: 8px !important;
+  border-radius: 8px !important;
+  padding: 0 20px !important;
+  height: 48px !important;
+}
+
+/* Line Selector Panel - Fix overflow */
+.line-selector {
+  background: transparent !important;
+  padding: 16px 20px !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+}
+
+/* Buttons - TfL Blue Primary */
+.btn-primary,
+.result-btn {
+  background: var(--tfl-blue) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.btn-primary:hover,
+.result-btn:hover {
+  background: var(--tfl-blue-hover) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.btn-secondary {
+  background: transparent !important;
+  border: 2px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+.btn-secondary:hover {
+  border-color: var(--tfl-blue) !important;
+  color: var(--tfl-blue) !important;
+}
+
+/* Result Overlay - Clean White Card */
+.result-card {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.result-time-breakdown {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.result-journey-summary {
+  border: 2px solid var(--border) !important;
+  background: var(--surface) !important;
+}
+
+/* Leaderboard - White Cards */
+#leaderboardScreen {
+  background: var(--bg) !important;
+}
+
+.lb-header {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.lb-your-score {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.lb-entry {
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: none !important;
+}
+
+/* General Text Colors */
+.muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Timer Pill */
+#timerPill {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+}
+
+#timerDisplay {
+  color: var(--text) !important;
+}
+/* ═══════════════════════════════════════════════════════════
+   TUBULE - COMPLETE FIXES FOR ALL 10 ISSUES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Issue 3: Fix white text on white background in game header */
+.game-logo {
+  color: var(--tfl-blue) !important;
+  font-weight: 700 !important;
+}
+
+.stat-value {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+/* Issues 2, 4: Fix line selector panel overflow and sharp corners */
+.line-selector {
+  border-radius: 16px !important;
+  overflow: visible !important; /* Allow X buttons to show */
+}
+
+#routeDisplay {
+  border-radius: 0 !important; /* No border radius - parent handles it */
+  overflow: visible !important; /* Allow route bars to show */
+}
+
+/* Parent container needs the border radius */
+.journey-card {
+  border-radius: 16px !important;
+  overflow: hidden !important; /* This clips children to rounded corners */
+}
+
+.route-display {
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+/* Ensure route bars have proper rounded corners */
+.route-bar {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+/* Issue 6: Simple chevron arrows everywhere */
+.menu-card-arrow,
+.lb-entry-arrow {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Issue 9: Make result overlay fullscreen */
+.result-overlay {
+  background: var(--bg) !important;
+}
+
+.result-card {
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  padding: 40px 24px !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Issue 10: Hide expert mode */
+.menu-card[onclick*="startExpert"] {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESULT SCREEN REDESIGN
+   ═══════════════════════════════════════════════════════════ */
+
+/* Result icon - simple vector circle like menu */
+.result-icon-circle {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  background: var(--circle) !important; /* Yellow like leaderboard menu icon */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 24px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+#resultIconContainer {
+  display: block !important;
+  margin-bottom: 16px !important;
+}
+
+/* Total Time - Main Score (large, prominent) */
+.result-total-time {
+  text-align: center !important;
+  margin: 32px 0 16px !important;
+}
+
+.result-total-time-value {
+  font-size: 3.5rem !important;
+  font-weight: 800 !important;
+  color: var(--tfl-blue) !important;
+  line-height: 1 !important;
+}
+
+.result-total-time-label {
+  font-size: 0.9rem !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  margin-top: 8px !important;
+  font-weight: 600 !important;
+}
+
+/* Time breakdown - smaller, subdued */
+.result-time-breakdown {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 32px !important;
+  margin-bottom: 32px !important;
+  padding: 16px !important;
+  background: var(--bg) !important;
+  border-radius: 12px !important;
+}
+
+.result-time-row-small {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.result-time-label-small {
+  font-size: 0.75rem !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.result-time-value-small {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+}
+
+/* Journey summary - no scroll, show all */
+.result-journey-summary {
+  max-height: none !important; /* Remove scroll */
+  overflow: visible !important;
+  margin-bottom: 32px !important;
+  background: white !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+}
+
+.journey-step-dot {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  border: 3px solid #1A1A1A !important;
+  background: #1A1A1A !important;
+  flex-shrink: 0 !important;
+  z-index: 1 !important;
+}
+
+/* Start station - white fill, black outline */
+.journey-step-dot.start {
+  background: white !important;
+  border: 3px solid #1A1A1A !important;
+}
+
+/* Correct answer - green filled, BLACK outline */
+.journey-step-dot.correct {
+  background: #00A84F !important;
+  border: 3px solid #1A1A1A !important;
+}
+
+/* Wrong/skipped answer - red filled, BLACK outline */
+.journey-step-dot.wrong {
+  background: #DC241F !important;
+  border: 3px solid #1A1A1A !important;
+}
+
+/* Hide old journey map section */
+.result-journey-map {
+  display: none !important;
+}
+
+/* Hide old correct stat */
+.result-stats {
+  display: none !important;
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════
+   RESULT JOURNEY PANEL - New animated layout
+   ═══════════════════════════════════════════════════════════ */
+
+.result-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  margin-bottom: 28px !important;
+}
+
+.result-header .result-icon-circle {
+  margin: 0 !important;
+  width: 56px !important;
+  height: 56px !important;
+  flex-shrink: 0 !important;
+}
+
+.result-header .result-title {
+  font-size: 1.3rem !important;
+  margin-bottom: 2px !important;
+}
+
+.result-header .result-message {
+  margin-bottom: 0 !important;
+  font-size: 0.85rem !important;
+}
+
+/* Journey panel */
+.result-journey-panel {
+  background: white !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 16px !important;
+  padding: 20px 20px !important;
+  margin-bottom: 24px !important;
+}
+
+/* Station row */
+.rj-station {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.rj-name {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #1A1A1A !important;
+}
+
+/* Dots */
+.rj-dot {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  border: 3px solid #1A1A1A !important;
+  flex-shrink: 0 !important;
+}
+
+.rj-dot-start {
+  background: white !important;
+}
+
+.rj-dot-correct {
+  background: #00A84F !important;
+}
+
+.rj-dot-wrong {
+  background: #DC241F !important;
+}
+
+/* Connector row */
+.rj-connector {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 6px 0 !important;
+  min-height: 40px !important;
+}
+
+.rj-line-seg {
+  width: 22px !important;
+  display: flex !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.rj-line-seg::before {
+  content: '' !important;
+  display: block !important;
+  width: 3px !important;
+  height: 100% !important;
+  min-height: 36px !important;
+  background: #E8E8E8 !important;
+  border-radius: 2px !important;
+}
+
+/* Time pills */
+.rj-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+.rj-pill {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  padding: 3px 8px !important;
+  border-radius: 20px !important;
+}
+
+.rj-pill-journey {
+  background: #E8F4FF !important;
+  color: #0019A8 !important;
+}
+
+.rj-pill-plan {
+  background: #F0F0F0 !important;
+  color: #6B6B6B !important;
+}
+
+.rj-pill-penalty {
+  background: #FFF0F0 !important;
+  color: #DC241F !important;
+  font-weight: 700 !important;
+}
+
+/* Total block */
+.result-total-block {
+  text-align: center !important;
+  padding: 24px 0 !important;
+  border-top: 2px solid var(--border) !important;
+  margin-bottom: 24px !important;
+}
+
+.result-total-time-value {
+  font-size: 3.5rem !important;
+  font-weight: 800 !important;
+  color: var(--tfl-blue) !important;
+  line-height: 1 !important;
+}
+
+.result-total-time-label {
+  font-size: 0.8rem !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  margin-top: 6px !important;
+  font-weight: 600 !important;
+}
+
