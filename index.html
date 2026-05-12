@@ -1622,47 +1622,47 @@ let stationIndex = {}; // Map station names to their journey IDs
 // To use: Set EMBEDDED_JOURNEY_DATA = <paste your JSON here>
 let EMBEDDED_JOURNEY_DATA = null;
 
+// Loaded chunks cache - avoid re-fetching
+const loadedChunks = {};
+
 async function loadJourneyDatabase() {
-  if (EMBEDDED_JOURNEY_DATA) {
-    JOURNEY_DATABASE = EMBEDDED_JOURNEY_DATA.journeys;
-    buildStationIndex();
-    console.log(`✓ Loaded ${Object.keys(JOURNEY_DATABASE).length} journeys (embedded)`);
-    return;
+  // Pre-load nothing - journeys are fetched on demand per station
+  JOURNEY_DATABASE = {};
+  stationIndex = {};
+  console.log('✓ Journey database ready (lazy loading)');
+}
+
+async function ensureChunkLoaded(stationName) {
+  if (!stationName) return;
+  const prefix = stationName.substring(0, 2).toUpperCase().replace(' ', '_');
+  if (loadedChunks[prefix]) return; // Already loaded
+
+  const base = window.location.pathname.includes('/tubule') 
+    ? '/tubule/journeys/' 
+    : './journeys/';
+
+  try {
+    const response = await fetch(`${base}${prefix}.json`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const chunk = await response.json();
+    // Merge into JOURNEY_DATABASE
+    Object.assign(JOURNEY_DATABASE, chunk);
+    // Update station index for new entries
+    Object.entries(chunk).forEach(([key, j]) => {
+      if (!j.routes || j.routes.length === 0) return;
+      if (!stationIndex[j.from_name]) stationIndex[j.from_name] = [];
+      stationIndex[j.from_name].push(key);
+    });
+    loadedChunks[prefix] = true;
+    console.log(`✓ Loaded chunk ${prefix}.json (${Object.keys(chunk).length} journeys)`);
+  } catch (e) {
+    console.error(`✗ Failed to load chunk ${prefix}.json:`, e);
+    loadedChunks[prefix] = true; // Mark as attempted so we don't retry endlessly
   }
-  
-  // Try multiple paths to handle both local and GitHub Pages deployment
-  const paths = [
-    'journeys_slim.json',                          // Local / root deployment
-    '/tubule/journeys_slim.json',                  // GitHub Pages subfolder
-    './journeys_slim.json',                        // Explicit relative
-  ];
-  
-  for (const path of paths) {
-    try {
-      console.log(`Trying: ${path}`);
-      const response = await fetch(path);
-      if (!response.ok) continue;
-      const data = await response.json();
-      JOURNEY_DATABASE = data.journeys;
-      buildStationIndex();
-      console.log(`✓ Loaded ${Object.keys(JOURNEY_DATABASE).length} journeys from ${path}`);
-      return;
-    } catch (e) {
-      console.log(`✗ Failed: ${path}`);
-    }
-  }
-  
-  console.error('❌ Could not load journey database from any path');
-  JOURNEY_DATABASE = null;
 }
 
 function buildStationIndex() {
-  stationIndex = {};
-  Object.entries(JOURNEY_DATABASE).forEach(([key, journey]) => {
-    if (!journey.routes || journey.routes.length === 0) return;
-    if (!stationIndex[journey.from_name]) stationIndex[journey.from_name] = [];
-    stationIndex[journey.from_name].push(key);
-  });
+  // No-op - index is built incrementally as chunks are loaded
 }
 
 function getJourneyFromDatabase(fromStation, toStation) {
@@ -1708,11 +1708,28 @@ function getJourneyFromDatabase(fromStation, toStation) {
   };
 }
 
-function generateDailyChallenge() {
-  if (!JOURNEY_DATABASE) {
-    // Fallback to hardcoded
-    return JOURNEYS.daily;
-  }
+async function generateDailyChallenge() {
+  if (!JOURNEY_DATABASE) return JOURNEYS.daily;
+
+  // Pre-load a spread of chunks so we have stations to pick from
+  const seedPrefixes = ['KI', 'OX', 'WA', 'VI', 'BA', 'NO', 'CA', 'HA', 'EL', 'PA'];
+  await Promise.all(seedPrefixes.map(p => {
+    const base = window.location.pathname.includes('/tubule') ? '/tubule/journeys/' : './journeys/';
+    if (loadedChunks[p]) return Promise.resolve();
+    return fetch(`${base}${p}.json`)
+      .then(r => r.ok ? r.json() : null)
+      .then(chunk => {
+        if (!chunk) return;
+        Object.assign(JOURNEY_DATABASE, chunk);
+        Object.entries(chunk).forEach(([key, j]) => {
+          if (!j.routes || !j.routes.length) return;
+          if (!stationIndex[j.from_name]) stationIndex[j.from_name] = [];
+          stationIndex[j.from_name].push(key);
+        });
+        loadedChunks[p] = true;
+      })
+      .catch(() => { loadedChunks[p] = true; });
+  }));
   
   const dailyJourneys = [];
   const allStations = Object.keys(stationIndex);
@@ -2127,15 +2144,17 @@ function buildMenuStripe() {
 // GAME MODES
 // ═════════════════════════════════════════════════════════════
 
-function startDaily() {
+async function startDaily() {
   mode = 'daily';
   document.getElementById('gameTitle').textContent = 'Daily Challenge';
-  
-  // Generate new daily challenge
-  JOURNEYS.daily = generateDailyChallenge();
-  
   resetGame();
   showScreen('gameScreen');
+  
+  // Show loading state while chunks are fetched
+  document.getElementById('startStation').textContent = 'Loading...';
+  document.getElementById('endStation').textContent = '';
+  
+  JOURNEYS.daily = await generateDailyChallenge();
   loadPuzzle();
 }
 
