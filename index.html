@@ -1681,12 +1681,8 @@ function getJourneyFromDatabase(fromStation, toStation) {
   // (TfL API sometimes gives routes starting from nearby stations due to closures)
   const validRoutes = journey.routes.filter(route => {
     if (!route.route || route.route.length === 0) return false;
-    const firstLeg = route.route[0];
-    // Check if the first leg starts from a station with the same base name
-    // (handles variations like "Arsenal" vs "Arsenal Underground Station")
-    const fromStationBase = fromStation.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-    const firstLegFromBase = firstLeg.from.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-    return firstLegFromBase.includes(fromStationBase) || fromStationBase.includes(firstLegFromBase);
+    // Slim format: legs only have 'line', no 'from'/'to' - just check route has lines
+    return route.route.every(leg => leg.line);
   });
   
   if (validRoutes.length === 0) {
@@ -1711,10 +1707,13 @@ function getJourneyFromDatabase(fromStation, toStation) {
 async function generateDailyChallenge() {
   if (!JOURNEY_DATABASE) return JOURNEYS.daily;
 
-  // Pre-load a spread of chunks so we have stations to pick from
-  const seedPrefixes = ['KI', 'OX', 'WA', 'VI', 'BA', 'NO', 'CA', 'HA', 'EL', 'PA'];
+  // Load all available chunks - these are the actual files in the journeys/ folder
+  const allPrefixes = ['AC','AL','AN','AR','BA','BE','BL','BO','BR','CA','CH','CL','CO','DO','EA','ED','EL','EM','EU','FA','FI','FU','GL','GO','GR','GU','HA','HE','HI','HO','HY','KE'];
+  const base = window.location.pathname.includes('/tubule') ? '/tubule/journeys/' : './journeys/';
+  
+  // Load a spread of chunks to seed station list
+  const seedPrefixes = ['BA','CA','HA','EA','GO','CH','BO','GR','AL','CO'];
   await Promise.all(seedPrefixes.map(p => {
-    const base = window.location.pathname.includes('/tubule') ? '/tubule/journeys/' : './journeys/';
     if (loadedChunks[p]) return Promise.resolve();
     return fetch(`${base}${p}.json`)
       .then(r => r.ok ? r.json() : null)
@@ -1734,19 +1733,17 @@ async function generateDailyChallenge() {
   const dailyJourneys = [];
   const allStations = Object.keys(stationIndex);
   
-  // Filter for stations with multiple outgoing journeys
   const validStartStations = allStations.filter(station => 
     stationIndex[station] && stationIndex[station].length >= 5
   );
   
   if (validStartStations.length === 0) {
-    console.warn('Not enough stations for continuous journey, using fallback');
+    console.warn('Not enough stations, using fallback');
     return JOURNEYS.daily;
   }
   
-  // Pick random starting station
   let currentStation = validStartStations[Math.floor(Math.random() * validStartStations.length)];
-  console.log(`Starting continuous journey from: ${currentStation}`);
+  console.log(`Starting from: ${currentStation}`);
   
   let attempts = 0;
   const maxAttempts = 50;
@@ -1754,102 +1751,75 @@ async function generateDailyChallenge() {
   while (dailyJourneys.length < DAILY_ROUNDS && attempts < maxAttempts) {
     attempts++;
     
-    // Get all possible journeys from current station
+    // Ensure the chunk for the current station is loaded
+    const prefix = currentStation.substring(0, 2).toUpperCase().replace(' ', '_');
+    if (!loadedChunks[prefix] && allPrefixes.includes(prefix)) {
+      try {
+        const r = await fetch(`${base}${prefix}.json`);
+        if (r.ok) {
+          const chunk = await r.json();
+          Object.assign(JOURNEY_DATABASE, chunk);
+          Object.entries(chunk).forEach(([key, j]) => {
+            if (!j.routes || !j.routes.length) return;
+            if (!stationIndex[j.from_name]) stationIndex[j.from_name] = [];
+            stationIndex[j.from_name].push(key);
+          });
+        }
+        loadedChunks[prefix] = true;
+      } catch(e) { loadedChunks[prefix] = true; }
+    }
+
     const possibleJourneyKeys = stationIndex[currentStation] || [];
     
     if (possibleJourneyKeys.length === 0) {
-      console.warn(`No journeys from ${currentStation}, restarting chain`);
-      // Can't continue chain, pick random and start over
       currentStation = validStartStations[Math.floor(Math.random() * validStartStations.length)];
       continue;
     }
     
-    // Filter for good journeys
+    // Filter for good journeys - slim format only has 'line' per leg, no 'from'/'to'
     const goodJourneys = possibleJourneyKeys
       .map(key => JOURNEY_DATABASE[key])
       .filter(j => {
-        if (!j.routes || j.routes.length === 0) return false;
-        
-        // Check if at least one route actually starts from the FROM station
-        const fromStationBase = j.from_name.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-        const hasValidRoute = j.routes.some(route => {
-          if (!route.route || route.route.length === 0) return false;
-          const firstLeg = route.route[0];
-          const firstLegFromBase = firstLeg.from.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-          return firstLegFromBase.includes(fromStationBase) || fromStationBase.includes(firstLegFromBase);
-        });
-        
-        if (!hasValidRoute) return false;
-        
-        // Get the first valid route
-        const validRoute = j.routes.find(route => {
-          if (!route.route || route.route.length === 0) return false;
-          const firstLeg = route.route[0];
-          const firstLegFromBase = firstLeg.from.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-          return firstLegFromBase.includes(fromStationBase) || fromStationBase.includes(firstLegFromBase);
-        });
-        
-        const numLines = validRoute.route.length; // Count legs not unique lines
-        const duration = validRoute.duration_minutes;
-        
-        return numLines >= 1 && numLines <= 3 && duration < 45;
+        if (!j || !j.routes || j.routes.length === 0) return false;
+        // In slim format we don't have leg.from, so just check routes exist and have lines
+        return j.routes.some(route => route.route && route.route.length > 0 && route.route[0].line);
       });
-    
+
     if (goodJourneys.length === 0) {
-      console.warn(`No good journeys from ${currentStation}`);
-      // Try to continue with any journey
-      if (possibleJourneyKeys.length > 0) {
-        const anyJourney = JOURNEY_DATABASE[possibleJourneyKeys[0]];
-        if (anyJourney.routes && anyJourney.routes[0]) {
-          const route = anyJourney.routes[0];
-          const lines = route.route.map(leg => leg.line);
-          dailyJourneys.push({
-            from: anyJourney.from_name,
-            to: anyJourney.to_name,
-            lines: lines,
-            duration: route.duration_minutes
-          });
-          currentStation = anyJourney.to_name;
-          console.log(`Added: ${anyJourney.from_name} → ${anyJourney.to_name}`);
-          continue;
-        }
+      // Fall back to any journey from this station
+      const anyJourney = JOURNEY_DATABASE[possibleJourneyKeys[0]];
+      if (anyJourney && anyJourney.routes && anyJourney.routes[0]) {
+        const route = anyJourney.routes[0];
+        const lines = route.route.map(leg => leg.line);
+        dailyJourneys.push({
+          from: anyJourney.from_name,
+          to: anyJourney.to_name,
+          lines: lines,
+          duration: route.duration_minutes
+        });
+        currentStation = anyJourney.to_name;
+        continue;
       }
-      // Restart chain
       currentStation = validStartStations[Math.floor(Math.random() * validStartStations.length)];
       continue;
     }
     
-    // Pick random from good journeys
+    // Pick a random good journey and use its fastest route
     const journey = goodJourneys[Math.floor(Math.random() * goodJourneys.length)];
-    
-    // Find the valid route (one that starts from correct station)
-    const fromStationBase = journey.from_name.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-    const validRoute = journey.routes.find(route => {
-      if (!route.route || route.route.length === 0) return false;
-      const firstLeg = route.route[0];
-      const firstLegFromBase = firstLeg.from.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-      return firstLegFromBase.includes(fromStationBase) || fromStationBase.includes(firstLegFromBase);
-    });
-    
-    if (!validRoute) continue;
-    
-    // Get lines IN ORDER from the route
-    const lines = validRoute.route.map(leg => leg.line);
+    const bestRoute = journey.routes[0]; // Already sorted by duration
+    const lines = bestRoute.route.map(leg => leg.line);
     
     dailyJourneys.push({
       from: journey.from_name,
       to: journey.to_name,
       lines: lines,
-      duration: validRoute.duration_minutes
+      duration: bestRoute.duration_minutes
     });
     
     console.log(`Added: ${journey.from_name} → ${journey.to_name} (${lines.join(' → ')})`);
-    
-    // CRITICAL: Next journey MUST start where this one ends
     currentStation = journey.to_name;
   }
   
-  // If we didn't get enough journeys, pad with fallback
   if (dailyJourneys.length < DAILY_ROUNDS) {
     console.warn(`Only got ${dailyJourneys.length} journeys, padding with fallback`);
     while (dailyJourneys.length < DAILY_ROUNDS) {
@@ -1857,8 +1827,7 @@ async function generateDailyChallenge() {
     }
   }
   
-  console.log('Final continuous journey:', dailyJourneys.map(j => `${j.from} → ${j.to}`));
-  
+  console.log('Journey chain:', dailyJourneys.map(j => `${j.from} → ${j.to}`));
   return dailyJourneys;
 }
 
@@ -2365,13 +2334,7 @@ function checkAutoSubmit() {
         if (!route.route || route.route.length === 0) continue;
         
         // Verify route starts from correct station
-        const firstLeg = route.route[0];
-        const fromStationBase = from.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-        const firstLegFromBase = firstLeg.from.toLowerCase().replace(/\s+(underground\s+)?station/gi, '').trim();
-        
-        if (!(firstLegFromBase.includes(fromStationBase) || fromStationBase.includes(firstLegFromBase))) {
-          continue; // Skip routes that don't start from the FROM station
-        }
+        // Slim format: no leg.from field, just check lines exist
         
         // Get lines IN ORDER from the route
         const routeLines = route.route.map(leg => leg.line);
