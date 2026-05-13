@@ -615,12 +615,12 @@
   /* Line selector at bottom - 2 ROWS x 4 COLUMNS */
   .line-selector {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: 70px 70px;
+    grid-template-columns: repeat(4, 56px);
+    grid-template-rows: repeat(2, 56px);
     gap: 12px;
     padding: 0;
-    max-width: 320px;
-    margin: 0 auto;
+    justify-content: center;
+    width: 100%;
   }
 
   .line-circle {
@@ -1362,7 +1362,7 @@
       </div>
       <div class="menu-card-text">
         <div class="menu-card-title">Daily Challenge</div>
-        <div class="menu-card-desc">5 journeys · Beat the clock</div>
+        <div class="menu-card-desc">Get across London in the quickest time</div>
       </div>
       <div class="menu-card-arrow">›</div>
     </div>
@@ -1418,13 +1418,9 @@
   </div>
 
   <div class="game-main">
-    <!-- Top stats bar -->
+    <!-- Top stats bar - streak dots only, timer removed -->
     <div class="top-stats">
       <div class="streak-dots" id="streakDots"></div>
-      <div class="timer-pill" id="timerPill" onclick="handleTimerClick()">
-        <span>⏱</span>
-        <span id="timerDisplay">0:00</span>
-      </div>
     </div>
 
     <!-- Journey area -->
