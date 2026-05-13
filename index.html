@@ -502,8 +502,9 @@
     width: 10px; height: 10px; border-radius: 50%;
     background: var(--border); transition: background 0.3s;
   }
-  .streak-dot.correct { background: var(--correct); }
-  .streak-dot.wrong   { background: var(--wrong); }
+  .streak-dot.correct  { background: var(--correct); }
+  .streak-dot.wrong    { background: #EE7C0E; }
+  .streak-dot.skipped  { background: var(--wrong); }
 
   .timer-pill {
     display: flex; align-items: center; gap: 5px;
@@ -1065,8 +1066,14 @@
     border: 3px solid #1A1A1A;
   }
   
-  /* Wrong/skipped answer - red filled, black outline */
+  /* Wrong answer - orange filled, black outline */
   .journey-step-dot.wrong {
+    background: #EE7C0E;
+    border: 3px solid #1A1A1A;
+  }
+
+  /* Skipped - red filled, black outline */
+  .journey-step-dot.skipped {
     background: #DC241F;
     border: 3px solid #1A1A1A;
   }
@@ -2644,12 +2651,12 @@ function swipeToNext() {
 function advancePuzzle() {
   const rounds = (mode === 'daily' || mode === 'practice') ? DAILY_ROUNDS : TOTAL_ROUNDS;
   if (!solved) { 
-    streak.push('wrong'); 
+    streak.push('skipped'); 
     renderStreakDots(); 
     solved = true;
     stopPlanningTimer();
     totalPlanningTime += planningTime;
-    perLegPlanningTime.push(planningTime); // Record this leg's planning time
+    perLegPlanningTime.push(planningTime);
     totalPlanningTime += 300; // 5 min skip penalty
   }
   currentRound++;
@@ -2742,17 +2749,14 @@ function endGame() {
     items.push(startRow);
 
     JOURNEYS.daily.forEach((journey, i) => {
-      const result = streak[i] || 'wrong';
-      const skipped = result === 'wrong';
+      const result = streak[i] || 'skipped';
       const journeyMins = journey.duration || 0;
       const planSecs = perLegPlanningTime ? (perLegPlanningTime[i] || 0) : 0;
 
-      // Connector row with times
-      const connector = buildConnectorRow(journeyMins, planSecs, skipped);
+      const connector = buildConnectorRow(journeyMins, planSecs, result);
       panel.appendChild(connector);
       items.push(connector);
 
-      // Station row
       const stationRow = buildStationRow(journey.to, result);
       panel.appendChild(stationRow);
       items.push(stationRow);
@@ -2791,21 +2795,22 @@ function endGame() {
 function buildStationRow(name, type) {
   const row = document.createElement('div');
   row.className = 'rj-station';
-  const dotClass = type === 'start' ? 'rj-dot rj-dot-start'
-    : type === 'correct'            ? 'rj-dot rj-dot-correct'
-    :                                 'rj-dot rj-dot-wrong';
+  const dotClass = type === 'start'   ? 'rj-dot rj-dot-start'
+    : type === 'correct'              ? 'rj-dot rj-dot-correct'
+    : type === 'wrong'                ? 'rj-dot rj-dot-wrong'
+    :                                   'rj-dot rj-dot-skipped';
   row.innerHTML = `<div class="${dotClass}"></div><div class="rj-name">${name}</div>`;
   return row;
 }
 
-function buildConnectorRow(journeyMins, planSecs, skipped) {
+function buildConnectorRow(journeyMins, planSecs, result) {
   const row = document.createElement('div');
   row.className = 'rj-connector';
 
   const times = [];
   if (journeyMins > 0) times.push(`<span class="rj-pill rj-pill-journey">+${journeyMins} min journey</span>`);
   if (planSecs > 0)    times.push(`<span class="rj-pill rj-pill-plan">+${fmtTime(planSecs)} planning</span>`);
-  if (skipped)         times.push(`<span class="rj-pill rj-pill-penalty">+5:00 skip penalty</span>`);
+  if (result === 'skipped') times.push(`<span class="rj-pill rj-pill-penalty">+5:00 skip penalty</span>`);
 
   row.innerHTML = `<div class="rj-line-seg"></div><div class="rj-pills">${times.join('')}</div>`;
   return row;

@@ -588,7 +588,11 @@
 }
 
 .rj-dot-wrong {
-  background: #DC241F !important;
+  background: #EE7C0E !important; /* Orange for wrong answers */
+}
+
+.rj-dot-skipped {
+  background: #DC241F !important; /* Red only for skipped */
 }
 
 /* Connector row */
